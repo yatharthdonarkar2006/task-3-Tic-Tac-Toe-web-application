@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe</title>
+    <style>
+      
+body {
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  background-color: #2ecd8b;
+  overflow: hidden;
+  position: relative;
+}
+
+.cell:hover {
+    background-color: #930e0e; 
+    border-color: #555; 
+    transform: scale(1.05); 
+    transition: all 0.3s ease; 
+}
+
+.container {
+  text-align: center;
+  z-index: 1;
+}
+
+#game-board {
+  display: grid;
+  grid-template-columns: repeat(3, 100px);
+  grid-gap: 5px;
+  margin: 20px auto;
+}
+
+.cell {
+  width: 100px;
+  height: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2em;
+  background-color: #bfe05b;
+  border: 2px solid #000;
+  cursor: pointer;
+}
+
+.cell:active {
+  background-color: #d23737;
+}
+
+.winner-cell {
+  animation: winPulse 1s infinite alternate;
+}
+
+@keyframes winPulse {
+  from { background-color: #bfe05b; transform: scale(1); }
+  to { background-color: #ffd700; transform: scale(1.1); }
+}
+
+#status {
+  margin-top: 15px;
+  font-size: 1.2em;
+}
+
+#reset, #finish-game {
+  margin-top: 10px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  margin-right: 10px;
+}
+
+#reset {
+  background-color: #930e0e;
+  color: #3fbed1;
+}
+
+#finish-game {
+  background-color: #3fbed1;
+  color: #333;
+}
+
+.button-container {
+  margin-top: 15px;
+}
+
+/* Celebration elements */
+.confetti {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background-color: #f00;
+  opacity: 0;
+  z-index: 0;
+}
+
+@keyframes fall {
+  0% {
+    opacity: 1;
+    top: -100px;
+    transform: rotate(0deg);
+  }
+  100% {
+    opacity: 0.3;
+    top: 100vh;
+    transform: rotate(360deg);
+  }
+}
+
+.celebration-text {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 3em;
+  color: #ffd700;
+  text-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+  opacity: 0;
+  z-index: 2;
+}
+
+@keyframes celebrationText {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+}
+
+#thank-you-modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  text-align: center;
+  display: none;
+}
+
+#thank-you-modal h2 {
+  margin-top: 0;
+  color: #2ecd8b;
+}
+
+#thank-you-modal p {
+  margin-bottom: 20px;
+  font-size: 18px;
+}
+
+.modal-button {
+  padding: 10px 20px;
+  background-color: #2ecd8b;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.modal-button:hover {
+  background-color: #1da06f;
+}
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tic-Tac-Toe</h1>
+        <div id="mode-selector">
+            <button id="vs-ai">Play vs AI</button>
+            <button id="vs-player">Play vs Player</button>
+        </div>
+        <div id="game-board" style="display: none;">
+            <div class="cell" data-cell></div>
+            <div class="cell" data-cell></div>
+            <div class="cell" data-cell></div>
+            <div class="cell" data-cell></div>
+            <div class="cell" data-cell></div>
+            <div class="cell" data-cell></div>
+            <div class="cell" data-cell></div>
+            <div class="cell" data-cell></div>
+            <div class="cell" data-cell></div>
+        </div>
+        <div id="status"></div>
+        <div class="button-container">
+            <button id="reset" style="display: none;">Reset Game</button>
+            <button id="finish-game" style="display: none;">Finish Game</button>
+        </div>
+    </div>
+    
+    <div class="celebration-text" id="celebration-text">YOU WIN!</div>
+    
+    <div id="thank-you-modal">
+        <h2>Thank You for Playing!</h2>
+        <p>We hope you enjoyed the game!</p>
+        <button class="modal-button" id="modal-ok">OK</button>
+    </div>
+    
+    <script>
+        const cells = document.querySelectorAll('[data-cell]');
+        const statusDisplay = document.getElementById('status');
+        const resetButton = document.getElementById('reset');
+        const finishButton = document.getElementById('finish-game');
+        const gameBoard = document.getElementById('game-board');
+        const modeSelector = document.getElementById('mode-selector');
+        const vsAIButton = document.getElementById('vs-ai');
+        const vsPlayerButton = document.getElementById('vs-player');
+        const celebrationText = document.getElementById('celebration-text');
+        const thankYouModal = document.getElementById('thank-you-modal');
+        const modalOkButton = document.getElementById('modal-ok');
+
+        let currentPlayer = 'X';
+        let board = Array(9).fill(null);
+        let isAIEnabled = false; // Track game mode
+        let gameActive = true;
+
+        // Event listeners for mode selection
+        vsAIButton.addEventListener('click', () => {
+            isAIEnabled = true;
+            startGame();
+        });
+
+        vsPlayerButton.addEventListener('click', () => {
+            isAIEnabled = false;
+            startGame();
+        });
+
+        function startGame() {
+            modeSelector.style.display = 'none';
+            gameBoard.style.display = 'grid';
+            resetButton.style.display = 'inline-block';
+            finishButton.style.display = 'none';
+            board.fill(null);
+            cells.forEach(cell => {
+                cell.textContent = '';
+                cell.classList.remove('winner-cell');
+            });
+            currentPlayer = 'X';
+            statusDisplay.textContent = `${currentPlayer}'s turn`;
+            gameActive = true;
+            
+            // Remove any existing confetti
+            const existingConfetti = document.querySelectorAll('.confetti');
+            existingConfetti.forEach(confetti => confetti.remove());
+            
+            // Reset celebration text
+            celebrationText.style.animation = 'none';
+            celebrationText.style.opacity = '0';
+        }
+
+        // Handle click event for user
+        cells.forEach((cell, index) => {
+            cell.addEventListener('click', () => {
+                if (!board[index] && gameActive) {
+                    board[index] = currentPlayer;
+                    cell.textContent = currentPlayer;
+                    
+                    const winResult = checkWinner();
+                    if (winResult) {
+                        gameActive = false;
+                        statusDisplay.textContent = `${currentPlayer} wins!`;
+                        highlightWinnerCells(winResult);
+                        finishButton.style.display = 'inline-block';
+                        if (currentPlayer === 'X' || !isAIEnabled) {
+                            // Only celebrate if human player wins
+                            startCelebration();
+                        }
+                    } else if (board.every(cell => cell)) {
+                        gameActive = false;
+                        statusDisplay.textContent = "It's a draw!";
+                        finishButton.style.display = 'inline-block';
+                    } else {
+                        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                        statusDisplay.textContent = `${currentPlayer}'s turn`;
+                        if (isAIEnabled && currentPlayer === 'O') aiMove();
+                    }
+                }
+            });
+        });
+
+        // AI logic to make a random move
+        function aiMove() {
+            setTimeout(() => {
+                if (gameActive) {
+                    const availableCells = board.map((cell, index) => cell === null ? index : null).filter(index => index !== null);
+                    const randomIndex = availableCells[Math.floor(Math.random() * availableCells.length)];
+                    board[randomIndex] = currentPlayer;
+                    cells[randomIndex].textContent = currentPlayer;
+                    
+                    const winResult = checkWinner();
+                    if (winResult) {
+                        gameActive = false;
+                        statusDisplay.textContent = `${currentPlayer} wins!`;
+                        highlightWinnerCells(winResult);
+                        finishButton.style.display = 'inline-block';
+                    } else if (board.every(cell => cell)) {
+                        gameActive = false;
+                        statusDisplay.textContent = "It's a draw!";
+                        finishButton.style.display = 'inline-block';
+                    } else {
+                        currentPlayer = 'X';
+                        statusDisplay.textContent = `${currentPlayer}'s turn`;
+                    }
+                }
+            }, 500); // Delay for realistic effect
+        }
+
+        // Reset functionality
+        resetButton.addEventListener('click', () => {
+            startGame();
+        });
+        
+        // Finish game functionality
+        finishButton.addEventListener('click', () => {
+            showThankYouModal();
+        });
+        
+        // Thank you modal
+        function showThankYouModal() {
+            thankYouModal.style.display = 'block';
+        }
+        
+        modalOkButton.addEventListener('click', () => {
+            thankYouModal.style.display = 'none';
+            returnToMainMenu();
+        });
+        
+        function returnToMainMenu() {
+            gameBoard.style.display = 'none';
+            resetButton.style.display = 'none';
+            finishButton.style.display = 'none';
+            modeSelector.style.display = 'block';
+            
+            // Remove any existing confetti
+            const existingConfetti = document.querySelectorAll('.confetti');
+            existingConfetti.forEach(confetti => confetti.remove());
+            
+            // Reset celebration text
+            celebrationText.style.animation = 'none';
+            celebrationText.style.opacity = '0';
+        }
+
+        // Check for winner
+        function checkWinner() {
+            const winningCombinations = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+                [0, 4, 8], [2, 4, 6]             // Diagonals
+            ];
+            
+            for (const combination of winningCombinations) {
+                if (combination.every(index => board[index] === currentPlayer)) {
+                    return combination;
+                }
+            }
+            return null;
+        }
+        
+        // Highlight winning cells
+        function highlightWinnerCells(combination) {
+            combination.forEach(index => {
+                cells[index].classList.add('winner-cell');
+            });
+        }
+        
+        // Create confetti effect
+        function createConfetti() {
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                
+                // Random position
+                confetti.style.left = Math.random() * 100 + 'vw';
+                
+                // Random color
+                const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                // Random size
+                const size = Math.random() * 10 + 5;
+                confetti.style.width = size + 'px';
+                confetti.style.height = size + 'px';
+                
+                // Random shape
+                const shapes = ['circle', 'square', 'triangle'];
+                const shape = shapes[Math.floor(Math.random() * shapes.length)];
+                if (shape === 'circle') {
+                    confetti.style.borderRadius = '50%';
+                } else if (shape === 'triangle') {
+                    confetti.style.width = '0';
+                    confetti.style.height = '0';
+                    confetti.style.borderLeft = size/2 + 'px solid transparent';
+                    confetti.style.borderRight = size/2 + 'px solid transparent';
+                    confetti.style.borderBottom = size + 'px solid ' + colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.backgroundColor = 'transparent';
+                }
+                
+                // Animation
+                const duration = Math.random() * 3 + 2;
+                confetti.style.animation = `fall ${duration}s linear forwards`;
+                
+                document.body.appendChild(confetti);
+                
+                // Remove confetti after animation
+                setTimeout(() => {
+                    confetti.remove();
+                }, duration * 1000);
+            }
+        }
+        
+        // Start celebration
+        function startCelebration() {
+            // Animated text
+            celebrationText.textContent = 'YOU WIN!';
+            celebrationText.style.animation = 'celebrationText 2s forwards';
+            
+            // Create confetti
+            createConfetti();
+            
+            // Sound effect (optional)
+            // const audio = new Audio('path_to_win_sound.mp3');
+            // audio.play();
+        }
+    </script>
+</body>
+</html>

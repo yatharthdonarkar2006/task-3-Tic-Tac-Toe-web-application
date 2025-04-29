@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Tic-Tac-Toe Adventure</title>
+    <style>
+        :root {
+            --primary: #2ecd8b;
+            --secondary: #930e0e;
+            --accent: #bfe05b;
+            --dark: #222;
+            --light: #fff;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--primary) 0%, #1a9c66 100%);
+            color: var(--dark);
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 20%),
+                radial-gradient(circle at 90% 80%, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 25%);
+            pointer-events: none;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Header Section */
+        header {
+            text-align: center;
+            padding: 30px 0;
+            position: relative;
+        }
+        
+        .title-container {
+            position: relative;
+            display: inline-block;
+        }
+        
+        h1 {
+            font-size: 4.2em;
+            font-weight: 800;
+            background: linear-gradient(45deg, var(--secondary) 0%, #ff6b6b 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+            transform: perspective(500px) rotateX(10deg);
+            animation: titleFloat 6s ease-in-out infinite;
+        }
+        
+        @keyframes titleFloat {
+            0%, 100% { transform: perspective(500px) rotateX(10deg) translateY(0); }
+            50% { transform: perspective(500px) rotateX(10deg) translateY(-10px); }
+        }
+        
+        .x-marker, .o-marker {
+            position: absolute;
+            font-size: 2.5em;
+            color: rgba(255, 255, 255, 0.8);
+            text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.2);
+            animation: spin 10s linear infinite;
+            opacity: 0.5;
+        }
+        
+        .x-marker:nth-child(1) { top: -20px; left: -15px; animation-delay: 0s; }
+        .o-marker:nth-child(2) { bottom: -10px; right: -15px; animation-delay: 2s; }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .tagline {
+            font-size: 1.4em;
+            color: var(--dark);
+            margin-bottom: 40px;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3);
+            animation: fadeIn 1s ease-out;
+            font-weight: 300;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Main Content */
+        .content-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        
+        @media (max-width: 768px) {
+            .content-wrapper {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Game Info Section */
+        .game-info {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.1),
+                0 1px 3px rgba(0, 0, 0, 0.05),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(5px);
+            transform: translateZ(0);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .game-info:hover {
+            transform: translateY(-5px);
+            box-shadow: 
+                0 15px 35px rgba(0, 0, 0, 0.15),
+                0 3px 10px rgba(0, 0, 0, 0.1),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+        }
+        
+        .game-info::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 80%);
+            opacity: 0;
+            transform: translate(100%, 100%);
+            transition: opacity 0.5s;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .game-info:hover::after {
+            opacity: 1;
+        }
+        
+        h2 {
+            font-size: 2em;
+            color: var(--secondary);
+            margin-bottom: 20px;
+            position: relative;
+            display: inline-block;
+        }
+        
+        h2::after {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--secondary), transparent);
+        }
+        
+        .game-info p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+            font-size: 1.1em;
+        }
+        
+        .game-info ul {
+            list-style-type: none;
+            padding-left: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .game-info li {
+            margin-bottom: 10px;
+            padding-left: 25px;
+            position: relative;
+            line-height: 1.5;
+        }
+        
+        .game-info li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+        
+        /* Game Board Preview */
+        .game-board-preview {
+            display: grid;
+            grid-template-columns: repeat(3, 70px);
+            grid-gap: 8px;
+            margin: 30px auto;
+            width: fit-content;
+            perspective: 800px;
+            transform-style: preserve-3d;
+            animation: boardRotate 20s infinite linear;
+            transform: rotateX(20deg);
+        }
+        
+        @keyframes boardRotate {
+            0% { transform: rotateX(20deg) rotateY(0); }
+            100% { transform: rotateX(20deg) rotateY(360deg); }
+        }
+        
+        .cell-preview {
+            width: 70px;
+            height: 70px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.8em;
+            font-weight: bold;
+            background: linear-gradient(135deg, #d1ffa1 0%, var(--accent) 100%);
+            border: 3px solid var(--dark);
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: cellAppear 0.5s backwards;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cell-preview:nth-child(1) { animation-delay: 0.1s; }
+        .cell-preview:nth-child(2) { animation-delay: 0.2s; }
+        .cell-preview:nth-child(3) { animation-delay: 0.3s; }
+        .cell-preview:nth-child(4) { animation-delay: 0.4s; }
+        .cell-preview:nth-child(5) { animation-delay: 0.5s; }
+        .cell-preview:nth-child(6) { animation-delay: 0.6s; }
+        .cell-preview:nth-child(7) { animation-delay: 0.7s; }
+        .cell-preview:nth-child(8) { animation-delay: 0.8s; }
+        .cell-preview:nth-child(9) { animation-delay: 0.9s; }
+        
+        @keyframes cellAppear {
+            from { opacity: 0; transform: scale(0.5); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        .cell-preview:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            z-index: 2;
+        }
+        
+        .cell-preview::after {
+            content: "";
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 70%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: -1;
+        }
+        
+        .cell-preview:hover::after {
+            opacity: 0.5;
+        }
+        
+        /* Fun Facts Section */
+        .fun-facts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .fact-card {
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 
+                0 10px 25px rgba(0, 0, 0, 0.08),
+                0 5px 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(5px);
+        }
+        
+        .fact-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 
+                0 15px 35px rgba(0, 0, 0, 0.12),
+                0 10px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        .fact-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            z-index: 1;
+        }
+        
+        .fact-card h3 {
+            color: var(--secondary);
+            margin-top: 5px;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .fact-card p {
+            line-height: 1.6;
+            color: #333;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .fact-icon {
+            position: absolute;
+            bottom: -20px;
+            right: -20px;
+            font-size: 8em;
+            color: rgba(0, 0, 0, 0.04);
+            transform: rotate(-15deg);
+            pointer-events: none;
+        }
+        
+        /* Play Button */
+        .play-button-container {
+            text-align: center;
+            margin: 40px 0;
+            perspective: 1000px;
+        }
+        
+        .play-button {
+            display: inline-block;
+            padding: 18px 50px;
+            background: linear-gradient(45deg, var(--secondary) 0%, #ff4b4b 100%);
+            color: white;
+            text-decoration: none;
+            font-size: 1.5em;
+            font-weight: bold;
+            border-radius: 50px;
+            box-shadow: 
+                0 10px 25px rgba(147, 14, 14, 0.3),
+                0 6px 12px rgba(147, 14, 14, 0.2),
+                inset 0 2px 3px rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            transform-style: preserve-3d;
+            transform: translateZ(0) rotateX(10deg);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .play-button:hover {
+            transform: translateZ(0) rotateX(10deg) scale(1.05) translateY(-5px);
+            box-shadow: 
+                0 15px 35px rgba(147, 14, 14, 0.4),
+                0 8px 15px rgba(147, 14, 14, 0.3),
+                inset 0 2px 5px rgba(255, 255, 255, 0.4);
+        }
+        
+        .play-button:active {
+            transform: translateZ(0) rotateX(10deg) scale(0.98) translateY(0);
+            box-shadow: 
+                0 5px 15px rgba(147, 14, 14, 0.4),
+                0 3px 8px rgba(147, 14, 14, 0.3),
+                inset 0 1px 3px rgba(255, 255, 255, 0.4);
+        }
+        
+        .play-button::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                rgba(255, 255, 255, 0.4) 50%,
+                transparent 100%
+            );
+            transition: left 0.7s ease;
+        }
+        
+        .play-button:hover::before {
+            left: 100%;
+        }
+        
+        /* How to Play Section */
+        .how-to-play {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.1),
+                0 1px 5px rgba(0, 0, 0, 0.05);
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(5px);
+        }
+        
+        .steps-container {
+            display: flex;
+            margin-top: 25px;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            gap: 20px;
+        }
+        
+        .step {
+            flex: 1;
+            min-width: 200px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .step:hover {
+            transform: translateY(-5px);
+        }
+        
+        .step-number {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 40px;
+            height: 40px;
+            background: var(--secondary);
+            color: white;
+            border-radius: 50%;
+            font-weight: bold;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 10px rgba(147, 14, 14, 0.2);
+        }
+        
+        .step h4 {
+            color: var(--secondary);
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .step p {
+            color: #444;
+            line-height: 1.5;
+            font-size: 0.95em;
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            color: rgba(0, 0, 0, 0.7);
+            position: relative;
+            margin-top: 50px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .footer-content {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .heart {
+            display: inline-block;
+            color: var(--secondary);
+            animation: heartbeat 1.5s infinite;
+            margin: 0 5px;
+        }
+        
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        
+        /* Floating shapes */
+        .shapes {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        
+        .shape {
+            position: absolute;
+            opacity: 0.4;
+            animation: floatAnimation 20s infinite linear;
+        }
+        
+        .shape:nth-child(1) {
+            top: 15%;
+            left: 5%;
+            animation-duration: 15s;
+            animation-delay: 0s;
+        }
+        
+        .shape:nth-child(2) {
+            top: 70%;
+            left: 80%;
+            animation-duration: 25s;
+            animation-delay: 2s;
+        }
+        
+        .shape:nth-child(3) {
+            top: 40%;
+            left: 90%;
+            animation-duration: 18s;
+            animation-delay: 5s;
+        }
+        
+        .shape:nth-child(4) {
+            top: 80%;
+            left: 25%;
+            animation-duration: 22s;
+            animation-delay: 7s;
+        }
+        
+        @keyframes floatAnimation {
+            0% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-100px) rotate(180deg);
+            }
+            100% {
+                transform: translateY(0) rotate(360deg);
+            }
+        }
+        
+        /* Media Queries */
+        @media (max-width: 992px) {
+            h1 {
+                font-size: 3.5em;
+            }
+            
+            .content-wrapper {
+                grid-template-columns: 1fr;
+            }
+            
+            .game-board-preview {
+                animation: none;
+                transform: none;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+            }
+            
+            h1 {
+                font-size: 3em;
+            }
+            
+            .game-info, .how-to-play, .fact-card {
+                padding: 20px;
+            }
+            
+            .steps-container {
+                flex-direction: column;
+            }
+            
+            .step {
+                width: 100%;
+            }
+            
+            .play-button {
+                padding: 15px 40px;
+                font-size: 1.3em;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2.5em;
+            }
+            
+            .tagline {
+                font-size: 1.1em;
+            }
+            
+            .cell-preview {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .game-board-preview {
+                grid-template-columns: repeat(3, 60px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="shapes">
+        <div class="shape">❌</div>
+        <div class="shape">⭕</div>
+        <div class="shape">❌</div>
+        <div class="shape">⭕</div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="title-container">
+                <span class="x-marker">❌</span>
+                <h1>Tic-Tac-Toe Adventure</h1>
+                <span class="o-marker">⭕</span>
+            </div>
+            <p class="tagline">Where strategy meets fun in the ultimate classic game!</p>
+        </header>
+        
+        <div class="content-wrapper">
+            <div class="game-info">
+                <h2>Game Features</h2>
+                <p>Welcome to the ultimate Tic-Tac-Toe experience! I've reimagined this classic game with modern features and beautiful design:</p>
+                <ul>
+                    <li>Challenge the AI with adaptive difficulty or play against a friend</li>
+                    <li>Stunning visual effects and interactive gameplay elements</li>
+                    <li>Sleek, responsive interface that works on any device</li>
+                    <li>Lightning-fast gameplay with intuitive controls</li>
+                </ul>
+                
+                <div class="game-board-preview">
+                    <div class="cell-preview">X</div>
+                    <div class="cell-preview">O</div>
+                    <div class="cell-preview">X</div>
+                    <div class="cell-preview">O</div>
+                    <div class="cell-preview">X</div>
+                    <div class="cell-preview">O</div>
+                    <div class="cell-preview">X</div>
+                    <div class="cell-preview"></div>
+                    <div class="cell-preview"></div>
+                </div>
+            </div>
+            
+            <div class="how-to-play">
+                <h2>How To Play</h2>
+                <p>Getting started is easy, even if you've never played before!</p>
+                
+                <div class="steps-container">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <h4>Choose Mode</h4>
+                        <p>Select whether you want to play against the AI or challenge a friend.</p>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <h4>Make Your Move</h4>
+                        <p>Click on any empty cell to place your mark (X always goes first).</p>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <h4>Win the Game</h4>
+                        <p>Get three of your marks in a horizontal, vertical, or diagonal row to win!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="fun-facts">
+            <div class="fact-card">
+                <h3>Ancient Origins</h3>
+                <p>Tic-Tac-Toe has been played for centuries! Ancient Egyptians played a version around 1300 BCE, and Romans had a similar game called "Terni Lapilli."</p>
+                <div class="fact-icon">🏺</div>
+            </div>
+            
+            <div class="fact-card">
+                <h3>By The Numbers</h3>
+                <p>There are exactly 255,168 possible ways to play a game of Tic-Tac-Toe, but only 138 unique board positions if we ignore rotations and reflections.</p>
+                <div class="fact-icon">🔢</div>
+            </div>
+            
+            <div class="fact-card">
+                <h3>Master Strategy</h3>
+                <p>With perfect play, Tic-Tac-Toe always ends in a draw. The best first move is to take the center square, giving you the highest chance of winning.</p>
+                <div class="fact-icon">🧠</div>
+            </div>
+        </div>
+        
+        <div class="play-button-container">
+            <a href="second.html" class="play-button">Play Now!</a>
+        </div>
+        
+        <footer>
+            <div class="footer-content">
+                <p>Created with <span class="heart">❤️</span> by a passionate game developer</p>
+                <p>© 2025 - All rights reserved</p>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
